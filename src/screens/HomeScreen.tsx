@@ -36,6 +36,7 @@ export default function HomeScreen() {
       'Entertainment': '🎮',
       'Shopping': '🛍️',
       'Health': '🏥',
+      'Others': '📦',
     };
     return emojiMap[category] || '💰';
   };

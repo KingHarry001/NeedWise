@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { useBudgetStore } from '../store/useBudgetStore';
+import { lightTheme, darkTheme } from '../utils/theme';
 
 export default function AddExpenseScreen() {
   const [expenseName, setExpenseName] = useState('');
@@ -8,11 +9,14 @@ export default function AddExpenseScreen() {
   const [selectedType, setSelectedType] = useState<'need' | 'want' | null>(null);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [importance, setImportance] = useState<1 | 2 | 3 | 4 | 5>(3);
+    const darkMode = useBudgetStore(state => state.darkMode);
+
+  const theme = darkMode ? darkTheme : lightTheme;
 
   // Get action from store
   const addExpense = useBudgetStore(state => state.addExpense);
 
-  const categories = ['Food', 'Transport', 'Utilities', 'Entertainment', 'Shopping', 'Health'];
+  const categories = ['Food', 'Transport', 'Utilities', 'Entertainment', 'Shopping', 'Health', 'Others'];
 
   const handleAddExpense = () => {
     // Validation
@@ -68,7 +72,7 @@ export default function AddExpenseScreen() {
 
       {/* Expense Name */}
       <View style={styles.inputGroup}>
-        <Text style={styles.label}>Expense Name</Text>
+        <Text style={[styles.label, { color: theme.text }]}>Expense Name</Text>
         <TextInput
           style={styles.input}
           placeholder="e.g., Groceries, Netflix"

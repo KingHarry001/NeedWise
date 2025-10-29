@@ -44,6 +44,7 @@ export default function InsightsScreen() {
     'Entertainment': '🎮',
     'Shopping': '🛍️',
     'Health': '🏥',
+    'Others': '📦',
   };
 
   return (
