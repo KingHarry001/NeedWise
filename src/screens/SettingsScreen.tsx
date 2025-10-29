@@ -1,26 +1,25 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Switch, Alert, TextInput } from 'react-native';
-import { useBudgetStore } from '../store/useBudgetStore';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Switch, Alert } from 'react-native';
+import { useAppStore } from '../store/useAppStore';
 import { lightTheme, darkTheme } from '../utils/theme';
 
 export default function SettingsScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [isEditingBudget, setIsEditingBudget] = useState(false);
-  const [budgetInput, setBudgetInput] = useState('');
 
-  const budget = useBudgetStore(state => state.budget);
-  const setBudget = useBudgetStore(state => state.setBudget);
-  const resetData = useBudgetStore(state => state.resetData);
-  const expenses = useBudgetStore(state => state.expenses);
-  const darkMode = useBudgetStore(state => state.darkMode);
-  const setDarkMode = useBudgetStore(state => state.setDarkMode);
+  const budgetItems = useAppStore(state => state.budgetItems);
+  const wishlistItems = useAppStore(state => state.wishlistItems);
+  const resetData = useAppStore(state => state.resetData);
+  const darkMode = useAppStore(state => state.darkMode);
+  const setDarkMode = useAppStore(state => state.setDarkMode);
 
   const theme = darkMode ? darkTheme : lightTheme;
+
+  const totalItems = budgetItems.length + wishlistItems.length;
 
   const handleResetData = () => {
     Alert.alert(
       'Reset All Data?',
-      `This will delete all ${expenses.length} expenses and reset your budget. This action cannot be undone.`,
+      `This will delete all ${totalItems} items (${budgetItems.length} budget items and ${wishlistItems.length} wishlist items). This action cannot be undone.`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -35,98 +34,31 @@ export default function SettingsScreen() {
     );
   };
 
-  const handleSaveBudget = () => {
-    const newBudget = parseFloat(budgetInput);
-    if (isNaN(newBudget) || newBudget <= 0) {
-      Alert.alert('Invalid Amount', 'Please enter a valid budget amount');
-      return;
-    }
-    setBudget(newBudget);
-    setIsEditingBudget(false);
-    Alert.alert('Success', `Budget updated to ₦${newBudget.toLocaleString()}`);
-  };
-
-  const startEditingBudget = () => {
-    setBudgetInput(budget.toString());
-    setIsEditingBudget(true);
-  };
-
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]} contentContainerStyle={styles.content}>
+      <View style={styles.spacer}></View>
       <Text style={[styles.title, { color: theme.text }]}>Settings</Text>
 
-      {/* Profile Section */}
+      {/* App Info */}
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>Profile</Text>
+        <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>Overview</Text>
         
-        <View style={[styles.profileCard, { backgroundColor: theme.cardBackground }]}>
-          <View style={[styles.avatar, { backgroundColor: theme.primary }]}>
-            <Text style={styles.avatarText}>U</Text>
+        <View style={[styles.infoCard, { backgroundColor: theme.cardBackground }]}>
+          <View style={styles.infoRow}>
+            <Text style={[styles.infoLabel, { color: theme.textSecondary }]}>Budget Items</Text>
+            <Text style={[styles.infoValue, { color: theme.text }]}>{budgetItems.length}</Text>
           </View>
-          <View style={styles.profileInfo}>
-            <Text style={[styles.profileName, { color: theme.text }]}>NeedWise User</Text>
-            <Text style={[styles.profileEmail, { color: theme.textSecondary }]}>{expenses.length} expenses tracked</Text>
+          <View style={[styles.divider, { backgroundColor: theme.border }]} />
+          <View style={styles.infoRow}>
+            <Text style={[styles.infoLabel, { color: theme.textSecondary }]}>Wishlist Items</Text>
+            <Text style={[styles.infoValue, { color: theme.text }]}>{wishlistItems.length}</Text>
+          </View>
+          <View style={[styles.divider, { backgroundColor: theme.border }]} />
+          <View style={styles.infoRow}>
+            <Text style={[styles.infoLabel, { color: theme.textSecondary }]}>Total Items</Text>
+            <Text style={[styles.infoValue, { color: theme.primary }]}>{totalItems}</Text>
           </View>
         </View>
-      </View>
-
-      {/* Budget Settings */}
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>Budget</Text>
-        
-        {isEditingBudget ? (
-          <View style={[styles.budgetEditCard, { backgroundColor: theme.cardBackground }]}>
-            <Text style={[styles.label, { color: theme.text }]}>New Budget Amount</Text>
-            <View style={[styles.budgetInputRow, { backgroundColor: theme.inputBackground }]}>
-              <Text style={[styles.currencySymbol, { color: theme.textSecondary }]}>₦</Text>
-              <TextInput
-                style={[styles.budgetInput, { color: theme.text }]}
-                keyboardType="numeric"
-                value={budgetInput}
-                onChangeText={setBudgetInput}
-                placeholder="Enter amount"
-                placeholderTextColor={theme.textTertiary}
-                autoFocus
-              />
-            </View>
-            <View style={styles.budgetButtonRow}>
-              <TouchableOpacity
-                style={[styles.budgetButton, styles.cancelButton, { backgroundColor: theme.inputBackground }]}
-                onPress={() => setIsEditingBudget(false)}
-              >
-                <Text style={[styles.cancelButtonText, { color: theme.textSecondary }]}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.budgetButton, styles.saveButton, { backgroundColor: theme.primary }]}
-                onPress={handleSaveBudget}
-              >
-                <Text style={styles.saveButtonText}>Save</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        ) : (
-          <TouchableOpacity style={[styles.settingItem, { backgroundColor: theme.cardBackground }]} onPress={startEditingBudget}>
-            <View style={styles.settingLeft}>
-              <Text style={styles.settingIcon}>💰</Text>
-              <View>
-                <Text style={[styles.settingTitle, { color: theme.text }]}>Monthly Budget</Text>
-                <Text style={[styles.settingSubtitle, { color: theme.textSecondary }]}>₦{budget.toLocaleString()}</Text>
-              </View>
-            </View>
-            <Text style={[styles.settingArrow, { color: theme.textTertiary }]}>›</Text>
-          </TouchableOpacity>
-        )}
-
-        <TouchableOpacity style={[styles.settingItem, { backgroundColor: theme.cardBackground }]}>
-          <View style={styles.settingLeft}>
-            <Text style={styles.settingIcon}>📅</Text>
-            <View>
-              <Text style={[styles.settingTitle, { color: theme.text }]}>Budget Period</Text>
-              <Text style={[styles.settingSubtitle, { color: theme.textSecondary }]}>Monthly</Text>
-            </View>
-          </View>
-          <Text style={[styles.settingArrow, { color: theme.textTertiary }]}>›</Text>
-        </TouchableOpacity>
       </View>
 
       {/* Preferences */}
@@ -180,17 +112,51 @@ export default function SettingsScreen() {
             <Text style={styles.settingIcon}>💾</Text>
             <View>
               <Text style={[styles.settingTitle, { color: theme.text }]}>Data Storage</Text>
-              <Text style={[styles.settingSubtitle, { color: theme.textSecondary }]}>Stored locally on device</Text>
+              <Text style={[styles.settingSubtitle, { color: theme.textSecondary }]}>
+                Stored locally on device
+              </Text>
             </View>
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.settingItem, { backgroundColor: theme.cardBackground }]} onPress={handleResetData}>
+        <TouchableOpacity
+          style={[styles.settingItem, { backgroundColor: theme.cardBackground }]}
+          onPress={handleResetData}
+        >
           <View style={styles.settingLeft}>
             <Text style={styles.settingIcon}>🗑️</Text>
             <Text style={[styles.settingTitle, { color: theme.danger }]}>
               Reset All Data
             </Text>
+          </View>
+          <Text style={[styles.settingArrow, { color: theme.textTertiary }]}>›</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Support */}
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>Support</Text>
+        
+        <TouchableOpacity style={[styles.settingItem, { backgroundColor: theme.cardBackground }]}>
+          <View style={styles.settingLeft}>
+            <Text style={styles.settingIcon}>❓</Text>
+            <Text style={[styles.settingTitle, { color: theme.text }]}>Help & Support</Text>
+          </View>
+          <Text style={[styles.settingArrow, { color: theme.textTertiary }]}>›</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={[styles.settingItem, { backgroundColor: theme.cardBackground }]}>
+          <View style={styles.settingLeft}>
+            <Text style={styles.settingIcon}>⭐</Text>
+            <Text style={[styles.settingTitle, { color: theme.text }]}>Rate App</Text>
+          </View>
+          <Text style={[styles.settingArrow, { color: theme.textTertiary }]}>›</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={[styles.settingItem, { backgroundColor: theme.cardBackground }]}>
+          <View style={styles.settingLeft}>
+            <Text style={styles.settingIcon}>📧</Text>
+            <Text style={[styles.settingTitle, { color: theme.text }]}>Contact Us</Text>
           </View>
           <Text style={[styles.settingArrow, { color: theme.textTertiary }]}>›</Text>
         </TouchableOpacity>
@@ -213,7 +179,7 @@ export default function SettingsScreen() {
         <TouchableOpacity style={[styles.settingItem, { backgroundColor: theme.cardBackground }]}>
           <View style={styles.settingLeft}>
             <Text style={styles.settingIcon}>📝</Text>
-            <Text style={[styles.settingTitle, { color: theme.text }]}>About NeedWise</Text>
+            <Text style={[styles.settingTitle, { color: theme.text }]}>Terms & Privacy</Text>
           </View>
           <Text style={[styles.settingArrow, { color: theme.textTertiary }]}>›</Text>
         </TouchableOpacity>
@@ -221,7 +187,7 @@ export default function SettingsScreen() {
 
       {/* Footer */}
       <Text style={[styles.footer, { color: theme.textTertiary }]}>
-        Made with 💚 by NeedWise Team{'\n'}
+        Made with 💚 for Smart Money Management{'\n'}
         All data stored securely on your device
       </Text>
     </ScrollView>
@@ -235,6 +201,9 @@ const styles = StyleSheet.create({
   content: {
     padding: 20,
     paddingBottom: 40,
+  },
+  spacer: {
+    padding: 20,
   },
   title: {
     fontSize: 28,
@@ -251,94 +220,31 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     marginBottom: 12,
   },
-  profileCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 16,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  avatarText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: 'white',
-  },
-  profileInfo: {
-    flex: 1,
-  },
-  profileName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  profileEmail: {
-    fontSize: 14,
-  },
-  budgetEditCard: {
+  infoCard: {
     borderRadius: 16,
     padding: 20,
-    marginBottom: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
   },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 12,
-  },
-  budgetInputRow: {
+  infoRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    marginBottom: 16,
+    paddingVertical: 12,
   },
-  currencySymbol: {
-    fontSize: 24,
+  infoLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  infoValue: {
+    fontSize: 18,
     fontWeight: 'bold',
-    marginRight: 8,
   },
-  budgetInput: {
-    flex: 1,
-    fontSize: 24,
-    fontWeight: '600',
-    paddingVertical: 12,
-  },
-  budgetButtonRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  budgetButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  cancelButton: {},
-  saveButton: {},
-  cancelButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  saveButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: 'white',
+  divider: {
+    height: 1,
   },
   settingItem: {
     flexDirection: 'row',

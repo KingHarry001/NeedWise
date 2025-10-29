@@ -1,50 +1,64 @@
-import React from 'react';
-import { createBottomTabNavigator, BottomTabNavigationOptions } from '@react-navigation/bottom-tabs';
-import HomeScreen from '../screens/HomeScreen';
-import AddExpenseScreen from '../screens/AddExpenseScreen';
-import InsightsScreen from '../screens/InsightsScreen';
-import SettingsScreen from '../screens/SettingsScreen';
-import { Text, View } from 'react-native';
+import React from "react";
+import {
+  createBottomTabNavigator,
+  BottomTabNavigationOptions,
+} from "@react-navigation/bottom-tabs";
+import HomeScreen from "../screens/HomeScreen";
+import BudgetsScreen from "../screens/BudgetsScreen";
+import AddItemScreen from "./AddItemScreen";
+import WishlistScreen from "../screens/WishlistScreen";
+import SettingsScreen from "../screens/SettingsScreen";
+import { Text, View, StyleSheet, Platform } from "react-native";
+import { useAppStore } from "../store/useBudgetStore";
 
-// Define the types for your tab screens
 export type TabNavigatorParamsList = {
   Home: undefined;
-  'Add Expense': undefined;
-  Insights: undefined;
+  Budgets: undefined;
+  "Add Item": undefined;
+  Wishlist: undefined;
   Settings: undefined;
 };
 
-// Create the bottom tab navigator with a specified type
 const Tab = createBottomTabNavigator<TabNavigatorParamsList>();
 
 export default function AppNavigator() {
+  const darkMode = useAppStore((state) => state.darkMode);
+
   const screenOptions: BottomTabNavigationOptions = {
-    tabBarActiveTintColor: '#2E7D32', // Active tab color (green)
-    tabBarInactiveTintColor: '#999', // Inactive tab color (gray)
+    tabBarActiveTintColor: darkMode ? "#4CAF50" : "#2E7D32",
+    tabBarInactiveTintColor: darkMode ? "#666" : "#999",
     tabBarStyle: {
-      backgroundColor: 'white',
-      borderTopWidth: 1,
-      borderTopColor: '#E0E0E0',
-      paddingBottom: 8,
+      backgroundColor: darkMode ? "#1E1E1E" : "#FFFFFF",
+      borderTopWidth: 0,
+      paddingBottom: Platform.OS === "ios" ? 20 : 8,
       paddingTop: 8,
-      height: 60,
+      height: Platform.OS === "ios" ? 85 : 65,
+      elevation: 0,
+      shadowColor: darkMode ? "#000" : "#000",
+      shadowOffset: {
+        width: 0,
+        height: -4,
+      },
+      shadowOpacity: darkMode ? 0.3 : 0.1,
+      shadowRadius: 12,
+      position: "absolute",
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
     },
     tabBarLabelStyle: {
-      fontSize: 12,
-      fontWeight: '600',
+      fontSize: 11,
+      fontWeight: "600",
+      marginTop: 4,
     },
-    headerStyle: {
-      backgroundColor: 'white',
-      elevation: 0,
-      shadowOpacity: 0,
-      borderBottomWidth: 1,
-      borderBottomColor: '#E0E0E0',
-    },
-    headerTitleStyle: {
-      fontSize: 20,
-      fontWeight: 'bold',
-      color: '#333',
-    },
+    headerShown: false, // Hide all headers
+    tabBarBackground: () => (
+      <View
+        style={[
+          styles.tabBarBackground,
+          { backgroundColor: darkMode ? "#1E1E1E" : "#FFFFFF" },
+        ]}
+      />
+    ),
   };
 
   return (
@@ -53,47 +67,157 @@ export default function AppNavigator() {
         name="Home"
         component={HomeScreen}
         options={{
-          tabBarIcon: ({ color }) => <TabIcon emoji="🏠" color={color} />,
-          headerShown: false, // Hide header for home screen
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon
+              emoji="🏠"
+              color={color}
+              focused={focused}
+              darkMode={darkMode}
+            />
+          ),
         }}
       />
       <Tab.Screen
-        name="Add Expense"
-        component={AddExpenseScreen}
+        name="Budgets"
+        component={BudgetsScreen}
         options={{
-          tabBarIcon: ({ color }) => <TabIcon emoji="➕" color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon
+              emoji="💰"
+              color={color}
+              focused={focused}
+              darkMode={darkMode}
+            />
+          ),
         }}
       />
       <Tab.Screen
-        name="Insights"
-        component={InsightsScreen}
+        name="Add Item"
+        component={AddItemScreen}
         options={{
-          tabBarIcon: ({ color }) => <TabIcon emoji="📊" color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon
+              emoji="➕"
+              color={color}
+              focused={focused}
+              darkMode={darkMode}
+              isCenter
+            />
+          ),
+          tabBarLabel: "",
+        }}
+      />
+      <Tab.Screen
+        name="Wishlist"
+        component={WishlistScreen}
+        options={{
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon
+              emoji="⭐"
+              color={color}
+              focused={focused}
+              darkMode={darkMode}
+            />
+          ),
         }}
       />
       <Tab.Screen
         name="Settings"
         component={SettingsScreen}
         options={{
-          tabBarIcon: ({ color }) => <TabIcon emoji="⚙️" color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon
+              emoji="⚙️"
+              color={color}
+              focused={focused}
+              darkMode={darkMode}
+            />
+          ),
         }}
       />
     </Tab.Navigator>
   );
 }
 
-// Simple emoji-based icon component
 interface TabIconProps {
   emoji: string;
   color: string;
+  focused: boolean;
+  darkMode: boolean;
+  isCenter?: boolean;
 }
 
-function TabIcon({ emoji, color }: TabIconProps) {
+function TabIcon({ emoji, color, focused, darkMode, isCenter }: TabIconProps) {
+  if (isCenter) {
+    return (
+      <View
+        style={[
+          styles.centerIconContainer,
+          {
+            backgroundColor: darkMode ? "#4CAF50" : "#2E7D32",
+            shadowColor: darkMode ? "#4CAF50" : "#2E7D32",
+          },
+        ]}
+      >
+        <Text style={styles.centerIconText}>{emoji}</Text>
+      </View>
+    );
+  }
+
   return (
-    <View>
-      <Text style={{ fontSize: 24, opacity: color === '#2E7D32' ? 1 : 0.5 }}>
+    <View
+      style={[
+        styles.iconContainer,
+        focused && {
+          backgroundColor: darkMode
+            ? "rgba(76, 175, 80, 0.15)"
+            : "rgba(46, 125, 50, 0.1)",
+        },
+      ]}
+    >
+      <Text style={[styles.iconText, { opacity: focused ? 1 : 0.5 }]}>
         {emoji}
       </Text>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  tabBarBackground: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  iconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  iconText: {
+    fontSize: 24,
+  },
+  centerIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  centerIconText: {
+    fontSize: 28,
+  },
+});

@@ -1,53 +1,41 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
+import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import * as SystemUI from 'expo-system-ui';
 import AppNavigator from './src/navigation/AppNavigator';
-import { useBudgetStore } from './src/store/useBudgetStore';
+import { useAppStore } from './src/store/useAppStore';
 
 export default function App() {
-  const [isReady, setIsReady] = useState(false);
-  const loadFromStorage = useBudgetStore(state => state.loadFromStorage);
+  const loadFromStorage = useAppStore(state => state.loadFromStorage);
+  const darkMode = useAppStore(state => state.darkMode);
+  const isLoaded = useAppStore(state => state.isLoaded);
 
   useEffect(() => {
-    // Load data when app starts
-    const loadData = async () => {
-      await loadFromStorage();
-      setIsReady(true);
-    };
-    
-    loadData();
+    // Load data from AsyncStorage on app start
+    loadFromStorage();
   }, []);
 
-  // Show loading screen while data loads
-  if (!isReady) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2E7D32" />
-        <Text style={styles.loadingText}>Loading NeedWise...</Text>
-      </View>
-    );
+  useEffect(() => {
+    // Set system UI colors based on theme
+    if (darkMode) {
+      SystemUI.setBackgroundColorAsync('#121212');
+    } else {
+      SystemUI.setBackgroundColorAsync('#F5F5F5');
+    }
+  }, [darkMode]);
+
+  // Show loading screen while data is being loaded
+  if (!isLoaded) {
+    return null; // You can add a splash screen here
   }
 
   return (
     <SafeAreaProvider>
       <NavigationContainer>
+        <StatusBar style={darkMode ? 'light' : 'dark'} />
         <AppNavigator />
       </NavigationContainer>
     </SafeAreaProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5F5F5',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#666',
-  },
-});
